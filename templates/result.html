@@ -544,11 +544,30 @@
           <div class="tab-right">
             <button
               class="export-btn"
+              onclick="copyAndOpenDeepSeek()"
+              title="AI提取攻略信息"
+              style="
+                background: linear-gradient(135deg, #1a73e8, #4285f4);
+                color: white;
+                border: none;
+                margin-right: 12px;
+              "
+            >
+              🤖 提取攻略
+            </button>
+            <button
+              class="export-btn"
               onclick="toggleExportMenu()"
               title="导出评论"
             >
               📥 导出评论
               <div class="export-menu" id="exportMenu">
+                <div class="export-option" onclick="copyAndOpenDeepSeek()">
+                  <div class="export-option-title">🤖 AI提取攻略信息</div>
+                  <div class="export-option-desc">
+                    智能整理评论中的实用信息和避坑指南
+                  </div>
+                </div>
                 <div class="export-option" onclick="exportAllComments('json')">
                   <div class="export-option-title">导出全部评论 (JSON)</div>
                   <div class="export-option-desc">包含所有笔记的评论数据</div>
@@ -681,6 +700,9 @@
                               </button>
                               <button class="header-action-btn export-note-btn" onclick="exportNoteComments(${noteIndex})" title="导出此笔记评论">
                                   📤 导出评论
+                              </button>
+                              <button class="header-action-btn" onclick="copyNoteCommentsAndOpenDeepSeek(${noteIndex})" title="复制评论并打开DeepSeek分析" style="border-color: #1a73e8; color: #1a73e8;">
+                                  🤖 AI分析
                               </button>
                           </div>
                       </div>
@@ -848,6 +870,7 @@
               note.comments.forEach(comment => {
                   data.push({
                       noteTitle: note.title,
+                      noteContent: note.content,
                       noteLink: note.link,
                       comment: comment,
                       noteIndex: noteIndices ? noteIndices[index] : currentData.data.indexOf(note)
@@ -944,6 +967,196 @@
               closeCommentModal();
           }
       });
+
+      // DeepSeek 分析功能
+      function copyAndOpenDeepSeek() {
+          if (!currentData) return;
+
+          const exportData = prepareExportData();
+          const content = formatCommentsForAI(exportData, currentData.task);
+
+          copyToClipboard(content).then(() => {
+              // 关闭菜单
+              document.getElementById('exportMenu').classList.remove('show');
+
+              // 打开 DeepSeek
+              window.open('https://chat.deepseek.com/', '_blank');
+
+              // 显示提示
+              showNotification('攻略信息已复制，请在 DeepSeek 中粘贴获取实用汇总', 'success');
+          }).catch(err => {
+              console.error('复制失败:', err);
+              showNotification('复制失败，请手动复制', 'error');
+          });
+      }
+
+      function copyNoteCommentsAndOpenDeepSeek(noteIndex) {
+          if (!currentData || !currentData.data[noteIndex]) return;
+
+          const note = currentData.data[noteIndex];
+          const exportData = prepareExportData([noteIndex]);
+          const content = formatCommentsForAI(exportData, note.title);
+
+          copyToClipboard(content).then(() => {
+              // 打开 DeepSeek
+              window.open('https://chat.deepseek.com/', '_blank');
+
+              // 显示提示
+              showNotification('攻略信息已复制，请在 DeepSeek 中粘贴获取实用汇总', 'success');
+          }).catch(err => {
+              console.error('复制失败:', err);
+              showNotification('复制失败，请手动复制', 'error');
+          });
+      }
+
+      function formatCommentsForAI(data, title) {
+          const lines = [
+              `请帮我从以下小红书评论中提取有用的攻略信息：`,
+              ``,
+              `主题：${title}`,
+              `评论总数：${data.length}`,
+              ``,
+              `请综合笔记内容和用户评论，用简短、结构化的方式整理出：`,
+              ``,
+              `## 🔥 热门推荐`,
+              `- 从笔记和评论中提取用户强烈推荐的产品、地点、方法等`,
+              ``,
+              `## ⚠️ 避坑指南`,
+              `- 用户在评论中提到的问题、缺点、需要注意的事项`,
+              ``,
+              `## 💡 实用技巧`,
+              `- 笔记作者和评论用户分享的使用方法、购买建议、经验技巧`,
+              ``,
+              `## 📍 具体信息`,
+              `- 价格、地址、时间、规格、品牌等具体数据`,
+              ``,
+              `## 🎯 替代方案`,
+              `- 用户提到的其他选择、平替产品、不同价位的选择等`,
+              ``,
+              `请直接给出整理后的攻略信息，不需要分析过程。每条信息用一句话概括，重点突出实用性。`,
+              ``,
+              `评论内容：`,
+              `${'='.repeat(50)}`
+          ];
+
+          // 按笔记分组显示完整信息
+          const noteGroups = {};
+          data.forEach(item => {
+              if (!noteGroups[item.noteTitle]) {
+                  noteGroups[item.noteTitle] = {
+                      title: item.noteTitle,
+                      content: '',
+                      link: item.noteLink,
+                      comments: []
+                  };
+              }
+              noteGroups[item.noteTitle].comments.push(item.comment);
+          });
+
+          // 从 currentData 获取笔记内容
+          if (currentData && currentData.data) {
+              currentData.data.forEach(note => {
+                  if (noteGroups[note.title]) {
+                      noteGroups[note.title].content = note.content;
+                  }
+              });
+          }
+
+          Object.keys(noteGroups).forEach(noteTitle => {
+              const noteInfo = noteGroups[noteTitle];
+              lines.push(``);
+              lines.push(`【${noteInfo.title}】`);
+              lines.push(`${'-'.repeat(30)}`);
+              lines.push(`笔记内容：${noteInfo.content}`);
+              lines.push(`链接：${noteInfo.link}`);
+              lines.push(``);
+              lines.push(`用户评论：`);
+
+              noteInfo.comments.forEach((comment, index) => {
+                  lines.push(`${index + 1}. ${comment}`);
+              });
+          });
+
+          lines.push('');
+          lines.push('请直接整理出上述5个方面的实用信息，每条用一句话说明，去掉无用的闲聊内容。');
+
+          return lines.join('\n');
+      }
+
+      async function copyToClipboard(text) {
+          try {
+              // 现代浏览器使用 Clipboard API
+              if (navigator.clipboard && window.isSecureContext) {
+                  await navigator.clipboard.writeText(text);
+                  return;
+              }
+
+              // 降级方案：使用传统方法
+              const textArea = document.createElement('textarea');
+              textArea.value = text;
+              textArea.style.position = 'fixed';
+              textArea.style.left = '-999999px';
+              textArea.style.top = '-999999px';
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+
+              const successful = document.execCommand('copy');
+              document.body.removeChild(textArea);
+
+              if (!successful) {
+                  throw new Error('复制命令执行失败');
+              }
+          } catch (err) {
+              // 最后的降级方案：显示文本让用户手动复制
+              const modal = prompt('自动复制失败，请手动复制以下内容：', text);
+              throw err;
+          }
+      }
+
+      function showNotification(message, type = 'info') {
+          // 创建通知元素
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              padding: 12px 20px;
+              border-radius: 6px;
+              color: white;
+              font-size: 14px;
+              z-index: 10000;
+              max-width: 300px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+              transition: all 0.3s ease;
+          `;
+
+          // 根据类型设置颜色
+          switch(type) {
+              case 'success':
+                  notification.style.backgroundColor = '#4CAF50';
+                  break;
+              case 'error':
+                  notification.style.backgroundColor = '#f44336';
+                  break;
+              default:
+                  notification.style.backgroundColor = '#2196F3';
+          }
+
+          notification.textContent = message;
+          document.body.appendChild(notification);
+
+          // 3秒后自动移除
+          setTimeout(() => {
+              notification.style.opacity = '0';
+              notification.style.transform = 'translateX(100%)';
+              setTimeout(() => {
+                  if (notification.parentNode) {
+                      notification.parentNode.removeChild(notification);
+                  }
+              }, 300);
+          }, 3000);
+      }
     </script>
   </body>
 </html>
