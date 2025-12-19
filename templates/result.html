@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>采集结果</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #ffffff;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .header {
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        z-index: 100;
+      }
+
+      .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        font-size: 18px;
+        font-weight: 400;
+        color: #333;
+      }
+
+      .back-btn {
+        background: none;
+        color: #666;
+        border: 1px solid #e5e5e5;
+        padding: 8px 16px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .back-btn:hover {
+        color: #333;
+        border-color: #333;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .info-section {
+        margin-bottom: 40px;
+        padding-bottom: 40px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 40px;
+      }
+
+      .info-item {
+        text-align: center;
+      }
+
+      .info-item .number {
+        font-size: 32px;
+        font-weight: 300;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .info-item .label {
+        color: #999;
+        font-size: 13px;
+      }
+
+      .tabs {
+        margin-bottom: 40px;
+      }
+
+      .tab-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 40px;
+      }
+
+      .tab-left {
+        display: flex;
+      }
+
+      .tab-right {
+        display: flex;
+        gap: 12px;
+      }
+
+      .tab-button {
+        padding: 16px 0;
+        margin-right: 40px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 400;
+        color: #999;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+      }
+
+      .tab-button.active {
+        color: #333;
+        border-bottom-color: #333;
+      }
+
+      .export-btn {
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border: 1px solid #e5e5e5;
+        color: #666;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .export-btn:hover {
+        background: #e9ecef;
+        border-color: #333;
+        color: #333;
+      }
+
+      .export-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 200px;
+        margin-top: 4px;
+      }
+
+      .export-menu.show {
+        display: block;
+      }
+
+      .export-option {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s ease;
+      }
+
+      .export-option:last-child {
+        border-bottom: none;
+      }
+
+      .export-option:hover {
+        background: #f8f9fa;
+      }
+
+      .export-option-title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .export-option-desc {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .tab-content {
+        min-height: 400px;
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* 笔记分组样式 */
+      .note-section {
+        margin-bottom: 60px;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .note-header {
+        background: #fafafa;
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .note-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: help;
+      }
+
+      .note-content {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.5;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: help;
+      }
+
+      .note-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .header-action-btn {
+        padding: 8px 16px;
+        border: 1px solid #e5e5e5;
+        background: white;
+        color: #666;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .header-action-btn:hover {
+        border-color: #333;
+        color: #333;
+      }
+
+      .header-action-btn.link-btn:hover {
+        border-color: #4285f4;
+        color: #4285f4;
+      }
+
+      .header-action-btn.comment-btn:hover {
+        border-color: #34a853;
+        color: #34a853;
+      }
+
+      .header-action-btn.export-note-btn:hover {
+        border-color: #ff9800;
+        color: #ff9800;
+      }
+
+      /* 图片网格 */
+      .note-images {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      @media (max-width: 1200px) {
+        .note-images {
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 14px;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .note-images {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .note-images {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 10px;
+        }
+      }
+
+      .image-item {
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #f0f0f0;
+      }
+
+      .image-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: #ddd;
+      }
+
+      .image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: all 0.3s ease;
+      }
+
+      .image-item:hover img {
+        transform: scale(1.05);
+      }
+
+      /* 评论样式 */
+      .comments-container {
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .comment-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #f8f8f8;
+      }
+
+      .comment-item:last-child {
+        border-bottom: none;
+      }
+
+      .comment-content {
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      .comment-meta {
+        color: #999;
+        font-size: 13px;
+      }
+
+      .comment-meta a {
+        color: #666;
+        text-decoration: none;
+      }
+
+      .comment-meta a:hover {
+        color: #333;
+      }
+
+      .loading,
+      .error,
+      .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+        font-size: 14px;
+      }
+
+      .error {
+        color: #a94442;
+      }
+
+      /* 评论弹窗 */
+      .comment-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .comment-modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80%;
+        overflow: hidden;
+      }
+
+      .comment-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .comment-modal-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .comment-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .comment-modal-close:hover {
+        color: #333;
+      }
+
+      .comment-modal-body {
+        padding: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .modal-comment-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #f8f8f8;
+      }
+
+      .modal-comment-item:last-child {
+        border-bottom: none;
+      }
+
+      .modal-comment-content {
+        color: #333;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      .modal-comment-content.sub-comment {
+        color: #666;
+        font-size: 13px;
+        margin-left: 20px;
+        margin-top: 8px;
+      }
+
+      /* Tooltip 样式 */
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+        white-space: normal;
+        z-index: 1000;
+        margin-bottom: 5px;
+      }
+
+      .tooltip:hover::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 20px;
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.8);
+        margin-bottom: -5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-content">
+        <h1 id="pageTitle">采集结果</h1>
+        <a href="/" class="back-btn">返回</a>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="info-section">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="number" id="totalNotes">-</div>
+            <div class="label">笔记</div>
+          </div>
+          <div class="info-item">
+            <div class="number" id="totalImages">-</div>
+            <div class="label">图片</div>
+          </div>
+          <div class="info-item">
+            <div class="number" id="totalComments">-</div>
+            <div class="label">评论</div>
+          </div>
+          <div class="info-item">
+            <div class="number" id="createdTime">-</div>
+            <div class="label">时间</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab-buttons">
+          <div class="tab-left">
+            <button class="tab-button active" onclick="switchTab('images')">
+              图片
+            </button>
+            <button class="tab-button" onclick="switchTab('comments')">
+              评论
+            </button>
+          </div>
+          <div class="tab-right">
+            <button
+              class="export-btn"
+              onclick="toggleExportMenu()"
+              title="导出评论"
+            >
+              📥 导出评论
+              <div class="export-menu" id="exportMenu">
+                <div class="export-option" onclick="exportAllComments('json')">
+                  <div class="export-option-title">导出全部评论 (JSON)</div>
+                  <div class="export-option-desc">包含所有笔记的评论数据</div>
+                </div>
+                <div class="export-option" onclick="exportAllComments('csv')">
+                  <div class="export-option-title">导出全部评论 (CSV)</div>
+                  <div class="export-option-desc">Excel可打开的表格格式</div>
+                </div>
+                <div class="export-option" onclick="exportAllComments('txt')">
+                  <div class="export-option-title">导出全部评论 (TXT)</div>
+                  <div class="export-option-desc">纯文本格式，便于阅读</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="tab-content">
+          <div id="imagesTab" class="tab-panel active">
+            <div id="imagesContainer" class="loading">加载中...</div>
+          </div>
+
+          <div id="commentsTab" class="tab-panel">
+            <div id="commentsContainer" class="loading">加载中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评论弹窗 -->
+    <div id="commentModal" class="comment-modal">
+      <div class="comment-modal-content">
+        <div class="comment-modal-header">
+          <div class="comment-modal-title" id="modalNoteTitle">笔记评论</div>
+          <button class="comment-modal-close" onclick="closeCommentModal()">
+            &times;
+          </button>
+        </div>
+        <div class="comment-modal-body" id="modalCommentBody">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const taskId = {{ task_id }};
+      let currentData = null;
+
+      document.addEventListener('DOMContentLoaded', function() {
+          loadData();
+
+          // 点击其他地方关闭导出菜单
+          document.addEventListener('click', function(event) {
+              const exportMenu = document.getElementById('exportMenu');
+              const exportBtn = event.target.closest('.export-btn');
+
+              if (!exportBtn && exportMenu.classList.contains('show')) {
+                  exportMenu.classList.remove('show');
+              }
+          });
+      });
+
+      function loadData() {
+          fetch(`/api/data/${taskId}`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('数据不存在');
+              }
+              return response.json();
+          })
+          .then(data => {
+              currentData = data;
+              displayData(data);
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              document.getElementById('imagesContainer').innerHTML =
+                  `<div class="error">加载失败: ${error.message}</div>`;
+              document.getElementById('commentsContainer').innerHTML =
+                  `<div class="error">加载失败: ${error.message}</div>`;
+          });
+      }
+
+      function displayData(data) {
+          document.getElementById('pageTitle').textContent = data.task;
+          document.getElementById('totalNotes').textContent = data.data.length;
+
+          let totalImages = 0;
+          let totalComments = 0;
+
+          data.data.forEach(note => {
+              totalImages += note.pictures.length;
+              totalComments += note.comments.length;
+          });
+
+          document.getElementById('totalImages').textContent = totalImages;
+          document.getElementById('totalComments').textContent = totalComments;
+          document.getElementById('createdTime').textContent =
+              new Date(data.created_at).toLocaleDateString();
+
+          displayImages(data.data);
+          displayComments(data.data);
+      }
+
+      function displayImages(notes) {
+          const container = document.getElementById('imagesContainer');
+
+          if (notes.length === 0) {
+              container.innerHTML = '<div class="empty">暂无图片</div>';
+              return;
+          }
+
+          let imagesHtml = '';
+
+          notes.forEach((note, noteIndex) => {
+              if (note.pictures.length === 0) return;
+
+              // 笔记标题和内容区域
+              imagesHtml += `
+                  <div class="note-section">
+                      <div class="note-header">
+                          <div class="note-title tooltip" title="${escapeHtml(note.title)}">${note.title}</div>
+                          <div class="note-content tooltip" title="${escapeHtml(note.content)}">${note.content}</div>
+                          <div class="note-actions">
+                              <button class="header-action-btn link-btn" onclick="openNoteLink('${note.link}')" title="查看原笔记">
+                                  🔗 查看原文
+                              </button>
+                              <button class="header-action-btn comment-btn" onclick="showNoteComments(${noteIndex})" title="查看评论">
+                                  💬 评论 (${note.comments.length})
+                              </button>
+                              <button class="header-action-btn export-note-btn" onclick="exportNoteComments(${noteIndex})" title="导出此笔记评论">
+                                  📤 导出评论
+                              </button>
+                          </div>
+                      </div>
+                      <div class="note-images">
+              `;
+
+              // 图片网格
+              note.pictures.forEach((imageUrl, imageIndex) => {
+                  const proxyUrl = `/proxy_image?url=${encodeURIComponent(imageUrl)}`;
+
+                  imagesHtml += `
+                      <div class="image-item" onclick="openNoteLink('${note.link}')">
+                          <img src="${proxyUrl}" alt="${escapeHtml(note.title)}" loading="lazy"
+                               onerror="this.style.display='none'; this.parentElement.style.display='none';">
+                      </div>
+                  `;
+              });
+
+              imagesHtml += `
+                      </div>
+                  </div>
+              `;
+          });
+
+          container.innerHTML = imagesHtml;
+      }
+
+      function displayComments(notes) {
+          const container = document.getElementById('commentsContainer');
+
+          let allComments = [];
+          notes.forEach(note => {
+              note.comments.forEach(comment => {
+                  allComments.push({
+                      content: comment,
+                      noteTitle: note.title,
+                      noteLink: note.link
+                  });
+              });
+          });
+
+          if (allComments.length === 0) {
+              container.innerHTML = '<div class="empty">暂无评论</div>';
+              return;
+          }
+
+          let commentsHtml = '<div class="comments-container">';
+
+          allComments.forEach((comment, index) => {
+              commentsHtml += `
+                  <div class="comment-item">
+                      <div class="comment-content">${comment.content}</div>
+                      <div class="comment-meta">
+                          来自: <a href="${comment.noteLink}" target="_blank">${comment.noteTitle}</a>
+                      </div>
+                  </div>
+              `;
+          });
+
+          commentsHtml += '</div>';
+          container.innerHTML = commentsHtml;
+      }
+
+      function switchTab(tabName) {
+          document.querySelectorAll('.tab-button').forEach(btn => {
+              btn.classList.remove('active');
+          });
+          event.target.classList.add('active');
+
+          document.querySelectorAll('.tab-panel').forEach(panel => {
+              panel.classList.remove('active');
+          });
+
+          if (tabName === 'images') {
+              document.getElementById('imagesTab').classList.add('active');
+          } else if (tabName === 'comments') {
+              document.getElementById('commentsTab').classList.add('active');
+          }
+      }
+
+      function toggleExportMenu() {
+          const exportMenu = document.getElementById('exportMenu');
+          exportMenu.classList.toggle('show');
+      }
+
+      function openNoteLink(link) {
+          window.open(link, '_blank');
+      }
+
+      function showNoteComments(noteIndex) {
+          if (!currentData || !currentData.data[noteIndex]) {
+              return;
+          }
+
+          const note = currentData.data[noteIndex];
+          const modal = document.getElementById('commentModal');
+          const modalTitle = document.getElementById('modalNoteTitle');
+          const modalBody = document.getElementById('modalCommentBody');
+
+          modalTitle.textContent = note.title;
+
+          if (note.comments.length === 0) {
+              modalBody.innerHTML = '<div class="empty">暂无评论</div>';
+          } else {
+              let commentsHtml = '';
+              note.comments.forEach(comment => {
+                  if (comment.startsWith('↳ ')) {
+                      // 子评论
+                      commentsHtml += `
+                          <div class="modal-comment-item">
+                              <div class="modal-comment-content sub-comment">${comment}</div>
+                          </div>
+                      `;
+                  } else {
+                      // 主评论
+                      commentsHtml += `
+                          <div class="modal-comment-item">
+                              <div class="modal-comment-content">${comment}</div>
+                          </div>
+                      `;
+                  }
+              });
+              modalBody.innerHTML = commentsHtml;
+          }
+
+          modal.style.display = 'block';
+      }
+
+      function closeCommentModal() {
+          document.getElementById('commentModal').style.display = 'none';
+      }
+
+      function escapeHtml(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+      }
+
+      // 导出功能
+      function exportAllComments(format) {
+          if (!currentData) return;
+
+          const exportData = prepareExportData();
+          downloadFile(exportData, format, `全部评论_${currentData.task}`);
+
+          // 关闭菜单
+          document.getElementById('exportMenu').classList.remove('show');
+      }
+
+      function exportNoteComments(noteIndex) {
+          if (!currentData || !currentData.data[noteIndex]) return;
+
+          const note = currentData.data[noteIndex];
+          const exportData = prepareExportData([noteIndex]);
+          downloadFile(exportData, 'txt', `${note.title}_评论`);
+      }
+
+      function prepareExportData(noteIndices = null) {
+          const data = [];
+          const notes = noteIndices ?
+              noteIndices.map(i => currentData.data[i]) :
+              currentData.data;
+
+          notes.forEach((note, index) => {
+              note.comments.forEach(comment => {
+                  data.push({
+                      noteTitle: note.title,
+                      noteLink: note.link,
+                      comment: comment,
+                      noteIndex: noteIndices ? noteIndices[index] : currentData.data.indexOf(note)
+                  });
+              });
+          });
+
+          return data;
+      }
+
+      function downloadFile(data, format, filename) {
+          let content, mimeType, extension;
+
+          switch (format) {
+              case 'json':
+                  content = JSON.stringify({
+                      task: currentData.task,
+                      exportTime: new Date().toISOString(),
+                      totalComments: data.length,
+                      comments: data
+                  }, null, 2);
+                  mimeType = 'application/json';
+                  extension = 'json';
+                  break;
+
+              case 'csv':
+                  const csvRows = [
+                      ['笔记标题', '笔记链接', '评论内容', '笔记索引']
+                  ];
+                  data.forEach(item => {
+                      csvRows.push([
+                          `"${item.noteTitle.replace(/"/g, '""')}"`,
+                          item.noteLink,
+                          `"${item.comment.replace(/"/g, '""')}"`,
+                          item.noteIndex
+                      ]);
+                  });
+                  content = csvRows.map(row => row.join(',')).join('\n');
+                  mimeType = 'text/csv';
+                  extension = 'csv';
+                  break;
+
+              case 'txt':
+              default:
+                  const lines = [
+                      `评论导出 - ${currentData.task}`,
+                      `导出时间: ${new Date().toLocaleString()}`,
+                      `评论总数: ${data.length}`,
+                      '='.repeat(50),
+                      ''
+                  ];
+
+                  let currentNote = null;
+                  data.forEach(item => {
+                      if (currentNote !== item.noteTitle) {
+                          currentNote = item.noteTitle;
+                          lines.push(`【${currentNote}】`);
+                          lines.push(`链接: ${item.noteLink}`);
+                          lines.push('-'.repeat(30));
+                      }
+                      lines.push(`• ${item.comment}`);
+                      lines.push('');
+                  });
+
+                  content = lines.join('\n');
+                  mimeType = 'text/plain';
+                  extension = 'txt';
+                  break;
+          }
+
+          // 创建下载链接
+          const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${filename}.${extension}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+      }
+
+      // 点击模态框外部关闭
+      window.onclick = function(event) {
+          const modal = document.getElementById('commentModal');
+          if (event.target == modal) {
+              closeCommentModal();
+          }
+      }
+
+      // ESC键关闭模态框
+      document.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape') {
+              closeCommentModal();
+          }
+      });
+    </script>
+  </body>
+</html>

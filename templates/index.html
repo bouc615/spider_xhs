@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据采集</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #ffffff;
+        min-height: 100vh;
+        padding: 60px 20px;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .auth-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        background: #fafafa;
+      }
+
+      .auth-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-indicator {
+        font-size: 18px;
+      }
+
+      .status-indicator.valid {
+        color: #4caf50;
+      }
+
+      .status-indicator.invalid {
+        color: #f44336;
+      }
+
+      .status-indicator.unknown {
+        color: #ff9800;
+      }
+
+      .config-btn {
+        margin-left: auto;
+        padding: 6px 12px;
+        background: none;
+        border: 1px solid #e5e5e5;
+        color: #666;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .config-btn:hover {
+        border-color: #333;
+        color: #333;
+      }
+
+      .auth-config {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e5e5;
+      }
+
+      .auth-help {
+        margin-top: 8px;
+      }
+
+      .auth-help details {
+        font-size: 13px;
+        color: #666;
+      }
+
+      .auth-help summary {
+        cursor: pointer;
+        color: #4285f4;
+      }
+
+      .auth-help ol {
+        margin: 8px 0 0 20px;
+      }
+
+      .auth-help li {
+        margin-bottom: 4px;
+      }
+
+      .auth-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .save-btn,
+      .test-btn,
+      .clear-btn {
+        padding: 8px 16px;
+        border: 1px solid #e5e5e5;
+        background: white;
+        color: #666;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .save-btn:hover {
+        border-color: #4caf50;
+        color: #4caf50;
+      }
+
+      .test-btn:hover {
+        border-color: #2196f3;
+        color: #2196f3;
+      }
+
+      .clear-btn:hover {
+        border-color: #f44336;
+        color: #f44336;
+      }
+
+      .form-section {
+        margin-bottom: 60px;
+      }
+
+      .form-group {
+        margin-bottom: 32px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 400;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 16px 0;
+        border: none;
+        border-bottom: 1px solid #e5e5e5;
+        font-size: 16px;
+        background: transparent;
+        transition: border-color 0.2s ease;
+        font-family: inherit;
+        resize: vertical;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-bottom-color: #333;
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: #ccc;
+      }
+
+      .search-btn {
+        width: 100%;
+        padding: 16px;
+        background: #333;
+        color: white;
+        border: none;
+        font-size: 16px;
+        font-weight: 400;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 24px;
+      }
+
+      .search-btn:hover {
+        background: #000;
+      }
+
+      .search-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .progress-section {
+        display: none;
+        margin-bottom: 40px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 2px;
+        background: #f0f0f0;
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: #333;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .progress-text {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .tasks-section {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 40px;
+      }
+
+      .tasks-title {
+        font-size: 16px;
+        margin-bottom: 24px;
+        color: #666;
+        font-weight: 400;
+      }
+
+      .task-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #f8f8f8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .task-item:last-child {
+        border-bottom: none;
+      }
+
+      .task-info h3 {
+        color: #333;
+        margin-bottom: 4px;
+        font-size: 16px;
+        font-weight: 400;
+      }
+
+      .task-info p {
+        color: #999;
+        font-size: 13px;
+      }
+
+      .task-status {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 400;
+        border-radius: 12px;
+      }
+
+      .status-completed {
+        background: #f0f8f0;
+        color: #4a7c59;
+      }
+
+      .status-running {
+        background: #fff8e1;
+        color: #8a6914;
+      }
+
+      .status-failed {
+        background: #fdf2f2;
+        color: #a94442;
+      }
+
+      .view-btn {
+        background: none;
+        color: #666;
+        border: 1px solid #e5e5e5;
+        padding: 6px 16px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 13px;
+        margin-left: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .view-btn:hover {
+        color: #333;
+        border-color: #333;
+      }
+
+      .empty-state {
+        text-align: center;
+        color: #ccc;
+        font-size: 14px;
+        padding: 40px 0;
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        color: white;
+        font-size: 14px;
+        z-index: 1000;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification.success {
+        background: #4caf50;
+      }
+
+      .notification.error {
+        background: #f44336;
+      }
+
+      .notification.info {
+        background: #2196f3;
+      }
+
+      /* 移动端优化 */
+      @media (max-width: 768px) {
+        body {
+          padding: 20px 15px;
+        }
+
+        .container {
+          max-width: 100%;
+        }
+
+        .auth-help details {
+          font-size: 12px;
+        }
+
+        .auth-help ol {
+          margin-left: 15px;
+        }
+
+        .auth-help li {
+          margin-bottom: 6px;
+        }
+
+        .method-section {
+          margin-bottom: 15px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          font-size: 16px; /* 防止iOS缩放 */
+        }
+
+        .auth-actions {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .save-btn,
+        .test-btn,
+        .clear-btn {
+          width: 100%;
+          padding: 12px 16px;
+        }
+
+        .search-btn {
+          padding: 18px;
+          font-size: 16px;
+        }
+
+        .notification {
+          right: 10px;
+          left: 10px;
+          transform: translateY(-100px);
+        }
+
+        .notification.show {
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="auth-section">
+        <div class="auth-status">
+          <span class="status-indicator unknown" id="statusIndicator">⚠️</span>
+          <span id="statusText">登录凭证未配置</span>
+          <button type="button" class="config-btn" onclick="toggleAuthConfig()">
+            配置
+          </button>
+        </div>
+
+        <div class="auth-config" id="authConfig" style="display: none">
+          <div class="form-group">
+            <label for="authInput">小红书登录凭证</label>
+            <textarea
+              id="authInput"
+              placeholder="请粘贴小红书登录后的身份验证信息..."
+              rows="4"
+            ></textarea>
+            <div class="auth-help">
+              <details>
+                <summary>如何获取登录凭证？</summary>
+                <ol style="margin: 12px 0 0 20px">
+                  <li>打开小红书网页版 (xiaohongshu.com) 并完成登录</li>
+                  <li>按F12打开开发者工具</li>
+                  <li>切换到Network(网络)标签</li>
+                  <li>刷新页面，在请求列表中找到任意请求</li>
+                  <li>点击请求，在Request Headers中找到Cookie字段</li>
+                  <li>复制完整的Cookie值并粘贴到上方输入框</li>
+                </ol>
+
+                <div
+                  style="
+                    background: #f8f9fa;
+                    padding: 12px;
+                    border-radius: 4px;
+                    margin-top: 16px;
+                  "
+                >
+                  <strong style="color: #e67e22">📱 移动端用户</strong>
+                  <p style="margin: 4px 0 0 0; font-size: 12px; color: #666">
+                    建议找一台电脑获取登录凭证，然后通过QQ、微信等发送给自己，在手机上复制粘贴即可
+                  </p>
+                </div>
+
+                <p style="margin-top: 12px; font-size: 12px; color: #999">
+                  💡 提示：登录凭证通常有效期为7-30天，失效后需要重新获取
+                </p>
+              </details>
+            </div>
+          </div>
+          <div class="auth-actions">
+            <button type="button" class="save-btn" onclick="saveAuth()">
+              保存登录凭证
+            </button>
+            <button type="button" class="test-btn" onclick="testAuth()">
+              测试登录凭证
+            </button>
+            <button type="button" class="clear-btn" onclick="clearAuth()">
+              清除登录凭证
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <form id="searchForm">
+          <div class="form-group">
+            <label for="keyword">关键词</label>
+            <input
+              type="text"
+              id="keyword"
+              name="keyword"
+              placeholder="输入搜索关键词"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="numNotes">数量</label>
+            <input
+              type="number"
+              id="numNotes"
+              name="numNotes"
+              min="1"
+              max="100"
+              value="10"
+              required
+            />
+          </div>
+
+          <button type="submit" class="search-btn" id="searchBtn">
+            开始采集
+          </button>
+        </form>
+
+        <div class="progress-section" id="progressSection">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">准备中...</div>
+        </div>
+      </div>
+
+      <div class="tasks-section">
+        <div class="tasks-title">历史记录</div>
+        <div id="tasksList">
+          <div class="empty-state">暂无记录</div>
+        </div>
+
+        <div
+          style="
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+          "
+        >
+          <a
+            href="/test_image"
+            target="_blank"
+            style="color: #666; text-decoration: none; font-size: 13px"
+            >🔧 图片代理测试</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentTaskId = null;
+      let progressInterval = null;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loadTasks();
+        checkAuthStatus();
+      });
+
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const keyword = document.getElementById("keyword").value.trim();
+          const numNotes = parseInt(document.getElementById("numNotes").value);
+
+          if (!keyword) {
+            showNotification("请输入搜索关键词", "error");
+            return;
+          }
+
+          // 检查登录凭证
+          const cookie = localStorage.getItem("xhs_cookie");
+          if (!cookie) {
+            showNotification("请先配置登录凭证", "error");
+            toggleAuthConfig();
+            return;
+          }
+
+          startSearch(keyword, numNotes);
+        });
+
+      // 登录凭证管理功能
+      function toggleAuthConfig() {
+        const config = document.getElementById("authConfig");
+        const isVisible = config.style.display !== "none";
+        config.style.display = isVisible ? "none" : "block";
+
+        if (!isVisible) {
+          // 显示时加载已保存的登录凭证
+          const savedAuth = localStorage.getItem("xhs_cookie");
+          if (savedAuth) {
+            document.getElementById("authInput").value = savedAuth;
+          }
+        }
+      }
+
+      function saveAuth() {
+        const authInput = document.getElementById("authInput");
+        const auth = authInput.value.trim();
+
+        if (!auth) {
+          showNotification("请输入登录凭证", "error");
+          return;
+        }
+
+        // 基本格式验证
+        if (!auth.includes("=") || auth.length < 50) {
+          showNotification(
+            "登录凭证格式不正确，请确保复制完整的身份验证信息",
+            "error"
+          );
+          return;
+        }
+
+        // 检查必要字段
+        const requiredFields = ["a1", "web_session"];
+        const missingFields = requiredFields.filter(
+          (field) => !auth.includes(`${field}=`)
+        );
+
+        if (missingFields.length > 0) {
+          showNotification(
+            `登录凭证缺少必要字段: ${missingFields.join(
+              ", "
+            )}，请确保已登录小红书后复制完整信息`,
+            "error"
+          );
+          return;
+        }
+
+        localStorage.setItem("xhs_cookie", auth);
+        showNotification("登录凭证保存成功，建议点击测试验证", "success");
+        checkAuthStatus();
+      }
+
+      function testAuth() {
+        const auth =
+          document.getElementById("authInput").value.trim() ||
+          localStorage.getItem("xhs_cookie");
+
+        if (!auth) {
+          showNotification("请先输入登录凭证", "error");
+          return;
+        }
+
+        // 发送测试请求
+        fetch("/api/test_cookie", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ cookie: auth }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showNotification("登录凭证测试成功", "success");
+              updateAuthStatus("valid", "登录凭证有效");
+            } else {
+              showNotification("登录凭证测试失败: " + data.message, "error");
+              updateAuthStatus("invalid", "登录凭证无效");
+            }
+          })
+          .catch((error) => {
+            showNotification("测试失败: " + error.message, "error");
+            updateAuthStatus("invalid", "登录凭证测试失败");
+          });
+      }
+
+      function clearAuth() {
+        localStorage.removeItem("xhs_cookie");
+        document.getElementById("authInput").value = "";
+        showNotification("登录凭证已清除", "info");
+        checkAuthStatus();
+      }
+
+      function checkAuthStatus() {
+        const auth = localStorage.getItem("xhs_cookie");
+        if (auth) {
+          updateAuthStatus("unknown", "登录凭证已配置，建议测试");
+        } else {
+          updateAuthStatus("unknown", "登录凭证未配置");
+        }
+      }
+
+      function updateAuthStatus(status, text) {
+        const indicator = document.getElementById("statusIndicator");
+        const statusText = document.getElementById("statusText");
+
+        indicator.className = `status-indicator ${status}`;
+        statusText.textContent = text;
+
+        switch (status) {
+          case "valid":
+            indicator.textContent = "✅";
+            break;
+          case "invalid":
+            indicator.textContent = "❌";
+            break;
+          default:
+            indicator.textContent = "⚠️";
+        }
+      }
+
+      function showNotification(message, type = "info") {
+        // 移除现有通知
+        const existing = document.querySelector(".notification");
+        if (existing) {
+          existing.remove();
+        }
+
+        const notification = document.createElement("div");
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        // 显示动画
+        setTimeout(() => notification.classList.add("show"), 100);
+
+        // 自动隐藏
+        setTimeout(() => {
+          notification.classList.remove("show");
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+
+      function startSearch(keyword, numNotes) {
+        const searchBtn = document.getElementById("searchBtn");
+        const progressSection = document.getElementById("progressSection");
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = "启动中...";
+        progressSection.style.display = "block";
+
+        // 获取Cookie
+        const cookie = localStorage.getItem("xhs_cookie");
+
+        fetch("/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            keyword: keyword,
+            num_notes: numNotes,
+            cookie: cookie,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+
+            currentTaskId = data.task_id;
+            searchBtn.textContent = "采集中...";
+
+            startProgressPolling();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showNotification("启动失败: " + error.message, "error");
+            resetSearchButton();
+          });
+      }
+
+      function startProgressPolling() {
+        progressInterval = setInterval(() => {
+          if (currentTaskId) {
+            checkTaskStatus(currentTaskId);
+          }
+        }, 2000);
+      }
+
+      function checkTaskStatus(taskId) {
+        fetch(`/api/task/${taskId}/status`)
+          .then((response) => response.json())
+          .then((data) => {
+            updateProgress(data);
+
+            if (data.status === "completed") {
+              clearInterval(progressInterval);
+              onTaskCompleted(taskId);
+            } else if (data.status === "failed") {
+              clearInterval(progressInterval);
+              onTaskFailed(data.error);
+            }
+          })
+          .catch((error) => {
+            console.error("Error checking status:", error);
+          });
+      }
+
+      function updateProgress(data) {
+        const progressFill = document.getElementById("progressFill");
+        const progressText = document.getElementById("progressText");
+
+        progressFill.style.width = data.progress + "%";
+
+        if (data.status === "running") {
+          progressText.textContent = `进度 ${data.progress}%`;
+        } else if (data.status === "pending") {
+          progressText.textContent = "准备中...";
+        }
+      }
+
+      function onTaskCompleted(taskId) {
+        const progressText = document.getElementById("progressText");
+        progressText.textContent = "完成";
+
+        showNotification("采集完成！", "success");
+
+        setTimeout(() => {
+          resetSearchButton();
+          loadTasks();
+          window.open(`/view/${taskId}`, "_blank");
+        }, 1000);
+      }
+
+      function onTaskFailed(error) {
+        const progressText = document.getElementById("progressText");
+        progressText.textContent = "失败: " + error;
+
+        showNotification("采集失败: " + error, "error");
+
+        setTimeout(() => {
+          resetSearchButton();
+        }, 3000);
+      }
+
+      function resetSearchButton() {
+        const searchBtn = document.getElementById("searchBtn");
+        const progressSection = document.getElementById("progressSection");
+
+        searchBtn.disabled = false;
+        searchBtn.textContent = "开始采集";
+        progressSection.style.display = "none";
+
+        currentTaskId = null;
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+      }
+
+      function loadTasks() {
+        fetch("/api/tasks")
+          .then((response) => response.json())
+          .then((tasks) => {
+            displayTasks(tasks);
+          })
+          .catch((error) => {
+            console.error("Error loading tasks:", error);
+          });
+      }
+
+      function displayTasks(tasks) {
+        const tasksList = document.getElementById("tasksList");
+
+        if (tasks.length === 0) {
+          tasksList.innerHTML = '<div class="empty-state">暂无记录</div>';
+          return;
+        }
+
+        tasksList.innerHTML = tasks
+          .map(
+            (task) => `
+                <div class="task-item">
+                    <div class="task-info">
+                        <h3>${task.keyword}</h3>
+                        <p>${new Date(task.created_at).toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <span class="task-status status-${task.status}">
+                            ${getStatusText(task.status)}
+                        </span>
+                        ${
+                          task.status === "completed"
+                            ? `<a href="/view/${task.id}" target="_blank" class="view-btn">查看</a>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function getStatusText(status) {
+        const statusMap = {
+          pending: "等待",
+          running: "进行中",
+          completed: "完成",
+          failed: "失败",
+        };
+        return statusMap[status] || status;
+      }
+    </script>
+  </body>
+</html>
