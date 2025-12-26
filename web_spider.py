@@ -30,14 +30,18 @@ class WebSpider:
         self.results_dir = "web_data"
         os.makedirs(self.results_dir, exist_ok=True)
 
-    def extract_note_data(self, note_url):
+    def extract_note_data(self, note_url, cookies_str=None):
         """
         提取单个笔记的完整数据
+        :param note_url: 笔记URL
+        :param cookies_str: Cookie字符串，如果为None则使用初始化时的Cookie
         """
+        # 优先使用传入的cookie，否则使用默认的
+        cookies_to_use = cookies_str or self.cookies_str
         try:
             # 获取笔记基本信息
             success, msg, note_info = self.data_spider.spider_note(
-                note_url, self.cookies_str
+                note_url, cookies_to_use
             )
             if not success:
                 logger.error(f"获取笔记信息失败: {msg}")
@@ -67,7 +71,7 @@ class WebSpider:
 
                 # 获取第一页评论进行测试
                 success, msg, res_json = self.data_spider.xhs_apis.get_note_out_comment(
-                    note_id, "", xsec_token, self.cookies_str
+                    note_id, "", xsec_token, cookies_to_use
                 )
 
                 if (
@@ -184,7 +188,7 @@ class WebSpider:
                     note_url = f"https://www.xiaohongshu.com/explore/{note['id']}?xsec_token={note['xsec_token']}"
 
                     logger.info(f"处理第 {i+1}/{total_notes} 个笔记...")
-                    note_data = self.extract_note_data(note_url)
+                    note_data = self.extract_note_data(note_url, cookies_str)
 
                     if note_data:
                         collected_data.append(note_data)
