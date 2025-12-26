@@ -8,11 +8,15 @@ set -e
 echo "🚀 小红书数据采集项目 - Amazon Linux 部署"
 echo "============================================"
 
-# 1. 更新系统
+# 1. 拉取最新代码
+echo "📥 拉取最新代码..."
+git pull origin master || echo "⚠️ Git pull 失败，继续使用本地代码"
+
+# 2. 更新系统
 echo "📦 更新系统..."
 sudo yum update -y
 
-# 2. 安装 Docker
+# 3. 安装 Docker
 echo "🐳 安装 Docker..."
 if ! command -v docker &> /dev/null; then
     sudo yum install -y docker
@@ -25,15 +29,15 @@ if ! command -v docker &> /dev/null; then
     exit 0
 fi
 
-# 3. 启动 Docker 服务
+# 4. 启动 Docker 服务
 echo "🔧 启动 Docker 服务..."
 sudo systemctl start docker
 
-# 4. 创建必要目录
+# 5. 创建必要目录
 echo "📁 创建数据目录..."
 mkdir -p datas/excel_datas datas/media_datas web_data
 
-# 5. 创建基础 .env 文件
+# 6. 创建基础 .env 文件
 if [ ! -f ".env" ]; then
     echo "⚙️ 创建配置文件..."
     cat > .env << 'EOF'
@@ -43,16 +47,16 @@ HOST=0.0.0.0
 EOF
 fi
 
-# 6. 停止旧容器
+# 7. 停止旧容器
 echo "🔄 清理旧容器..."
 docker stop xhs-spider-app 2>/dev/null || true
 docker rm xhs-spider-app 2>/dev/null || true
 
-# 7. 构建镜像
+# 8. 构建镜像
 echo "🔨 构建 Docker 镜像..."
 docker build -t xhs-spider .
 
-# 8. 启动容器
+# 9. 启动容器
 echo "🚀 启动服务..."
 docker run -d \
     --name xhs-spider-app \
@@ -63,11 +67,11 @@ docker run -d \
     -v $(pwd)/.env:/app/.env \
     xhs-spider python start_web.py
 
-# 9. 等待服务启动
+# 10. 等待服务启动
 echo "⏳ 等待服务启动..."
 sleep 5
 
-# 10. 检查服务状态
+# 11. 检查服务状态
 if docker ps | grep -q xhs-spider-app; then
     echo "✅ 服务启动成功！"
 else
@@ -76,10 +80,10 @@ else
     exit 1
 fi
 
-# 11. 获取公网 IP
+# 12. 获取公网 IP
 PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || echo "localhost")
 
-# 12. 显示部署信息
+# 13. 显示部署信息
 echo ""
 echo "🎉🎉🎉 部署完成！🎉🎉🎉"
 echo "=================================="
